@@ -1,0 +1,32 @@
+name: Security Scan with Syft
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Eğer proje Docker ile build alıyorsa
+      - name: Build Docker image
+        run: |
+          docker build -t myapp:latest .
+
+      # Syft kurulumu
+      - name: Install Syft
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          syft --version
+
+      # SBOM oluşturma
+      - name: Generate SBOM
+        run: |
+          syft myapp:latest -o json > sbom.json
+          cat sbom.json
